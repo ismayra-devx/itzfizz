@@ -86,7 +86,7 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
         data-card-bg={card.bgColor}
         data-card-text={card.textColor}
         data-card-caption-color={card.captionColor}
-        className={`pointer-events-auto absolute z-10 w-[clamp(170px,18vw,255px)] select-none rounded-[8px] p-[18px] max-sm:p-3 overflow-hidden ${card.desktopPosition} max-md:${card.mobilePosition} ${className}`}
+        className={`pointer-events-auto absolute z-10 w-[clamp(142px,18vw,255px)] max-sm:w-[146px] select-none rounded-[8px] p-[18px] max-sm:p-2.5 overflow-hidden ${card.desktopPosition} max-md:${card.mobilePosition} ${className}`}
         style={{
           fontFamily: "var(--font-archivo), sans-serif",
           backgroundColor: isFinal ? card.bgColor : "transparent",
