@@ -87,7 +87,10 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
         data-card-id={card.id}
         data-card-target={card.target}
         data-card-threshold={card.threshold}
-        className={`pointer-events-auto absolute z-25 w-[clamp(170px,18vw,255px)] select-none rounded-[8px] p-[18px] max-sm:p-3 overflow-hidden shadow-2xl transition-all duration-300 ${card.desktopPosition} max-md:${card.mobilePosition} ${className}`}
+        data-card-bg={card.bgColor}
+        data-card-text={card.textColor}
+        data-card-caption-color={card.captionColor}
+        className={`pointer-events-auto absolute z-25 w-[clamp(170px,18vw,255px)] select-none rounded-[8px] p-[18px] max-sm:p-3 overflow-hidden shadow-2xl ${card.desktopPosition} max-md:${card.mobilePosition} ${className}`}
         style={{
           fontFamily: "var(--font-archivo), sans-serif",
           backgroundColor: isFinal ? card.bgColor : "transparent",
@@ -112,9 +115,8 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
           {/* Number (52px / weight 800) */}
           <div
             data-card-number
-            className="text-[clamp(32px,3.6vw,52px)] font-extrabold leading-none tracking-tight"
+            className="text-[clamp(32px,3.6vw,52px)] font-extrabold leading-none tracking-tight text-white/95"
             style={{
-              color: isFinal ? card.textColor : "rgba(255, 255, 255, 0.95)",
               willChange: "transform, color",
             }}
           >
@@ -124,9 +126,8 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
           {/* Caption (13px leading-snug) */}
           <div
             data-card-caption
-            className="text-[13px] max-sm:text-[11px] leading-snug font-medium line-clamp-2"
+            className="text-[13px] max-sm:text-[11px] leading-snug font-medium line-clamp-2 text-white/70"
             style={{
-              color: isFinal ? card.captionColor : "rgba(255, 255, 255, 0.7)",
               willChange: "color",
             }}
           >
