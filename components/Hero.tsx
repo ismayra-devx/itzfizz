@@ -16,61 +16,62 @@ export default function Hero() {
   const carRef = useRef<HTMLDivElement>(null);
   const carShadowRef = useRef<HTMLDivElement>(null);
   const streaksRef = useRef<HTMLDivElement>(null);
-  const scrollHintRef = useRef<HTMLDivElement>(null);
 
   return (
     <div ref={containerRef} className="relative w-full bg-[#1F2316] select-none">
-      {/* Fixed Overlays: Static Grain & Vignette */}
-      <div className="scene-grain" />
-      <div className="scene-vignette" />
+      {/* 1. Static Cinematic Overlays: Vignette & Soft-Light SVG Grain (Nothing animates) */}
+      <div className="scene-grain" aria-hidden="true" />
+      <div className="scene-vignette" aria-hidden="true" />
 
-      {/* Hero Viewport (100svh pinned section) */}
+      {/* Hero Viewport (100svh screen) */}
       <section className="relative h-[100svh] w-full overflow-hidden flex items-center justify-center">
-        {/* Background Drone Aerial Scene: Foliage Verges & Leaf Specks */}
+        {/* 2. Drone Aerial Scene: Foliage Verges & Leaf Specks */}
         <Scene />
 
-        {/* Central Road Strip (~27svh desktop / ~22svh mobile) with Mint Trail Mask */}
+        {/* 3. Road Strip (~27svh desktop / ~22svh mobile) with Mint Trail & Double Yellow */}
         <Road
           roadRef={roadStripRef}
           trailRef={trailRef}
           counterHeadlineRef={counterHeadlineRef}
           ghostHeadlineRef={ghostHeadlineRef}
-          className="z-15"
+          mode="final"
+          className="z-10"
         />
 
-        {/* Car Component (Centered vertically on road center line) */}
+        {/* 4. Real Supercar from /car-right.webp parked at the right edge with contact shadow */}
         <Car
           ref={carRef}
           shadowRef={carShadowRef}
           streaksRef={streaksRef}
-          className="z-20 left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
+          mode="parked"
+          className="top-1/2 -translate-y-1/2 z-20"
         />
 
-        {/* Canopy Foliage Layer (Overlaps road edges, ABOVE car in z-index) */}
+        {/* 5. Canopy Foliage Layer (Overlaps road edges, ABOVE car in z-index) */}
         <Canopy className="z-30" />
 
-        {/* 4 Stat Cards in Staggered Diagonal Zig-Zag Layout */}
-        <div className="pointer-events-none absolute inset-0 z-35">
+        {/* 6. Four Stat Cards in Staggered Diagonal Zig-Zag Layout (Final Active State) */}
+        <div className="pointer-events-none absolute inset-0 z-25">
           {STAT_CARDS_DATA.map((card) => (
-            <StatCard key={card.id} card={card} />
+            <StatCard key={card.id} card={card} state="final" />
           ))}
         </div>
 
-        {/* Cinematic Scroll Hint (Bottom Center) */}
+        {/* 7. SCROLL Hint (Bottom Center) */}
         <div
-          ref={scrollHintRef}
-          className="pointer-events-none absolute bottom-7 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2"
+          className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 z-35 flex flex-col items-center gap-1.5"
+          aria-hidden="true"
         >
-          <span className="text-[10px] uppercase font-bold tracking-[0.32em] text-white/50">
+          <span className="text-[10px] uppercase font-extrabold tracking-[0.32em] text-white/50">
             SCROLL
           </span>
-          <div className="h-6 w-[1.5px] overflow-hidden rounded-full bg-white/15">
-            <div className="h-full w-full bg-[#50EF7E] animate-bounce" />
+          <div className="h-5 w-[1.5px] overflow-hidden rounded-full bg-white/20">
+            <div className="h-2 w-full bg-[#50EF7E] rounded-full" />
           </div>
         </div>
       </section>
 
-      {/* Next Section (100vh buffer so unpinning feels natural and clean) */}
+      {/* 8. Next Section (100vh buffer so unpinning feels natural) */}
       <section className="relative min-h-[100vh] w-full bg-[#181B11] border-t border-white/10 px-8 py-24 flex flex-col items-center justify-center text-center z-40">
         <div className="max-w-2xl flex flex-col items-center gap-4">
           <span className="text-xs uppercase tracking-[0.3em] text-[#50EF7E] font-bold">

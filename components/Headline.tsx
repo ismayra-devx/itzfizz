@@ -7,26 +7,27 @@ const HEADLINE_TEXT = "WELCOME ITZFIZZ";
 interface HeadlineProps {
   className?: string;
   variant?: "ghost" | "solid";
+  ariaHidden?: boolean;
 }
 
 export const Headline = forwardRef<HTMLDivElement, HeadlineProps>(
-  ({ className = "", variant = "ghost" }, ref) => {
+  ({ className = "", variant = "ghost", ariaHidden }, ref) => {
     return (
       <div
         ref={ref}
-        className={`pointer-events-none select-none flex items-center justify-center w-[85%] max-w-[1440px] mx-auto text-center font-extrabold uppercase tracking-[0.08em] ${className}`}
+        aria-hidden={ariaHidden ?? (variant === "ghost")}
+        className={`pointer-events-none select-none flex items-center justify-center w-[85%] max-w-[1400px] mx-auto text-center font-extrabold uppercase tracking-[0.08em] ${className}`}
         style={{
           fontFamily: "var(--font-archivo), sans-serif",
-          fontSize: "clamp(2.2rem, 7.8vw, 7.2rem)",
+          fontSize: "clamp(2rem, 7.5vw, 6.8rem)",
           lineHeight: 1,
           willChange: "transform",
         }}
-        aria-hidden={variant === "solid"}
       >
         {HEADLINE_TEXT.split("").map((char, index) => {
           if (char === " ") {
             return (
-              <span key={index} className="inline-block w-[0.35em]">
+              <span key={index} className="inline-block w-[0.3em]">
                 &nbsp;
               </span>
             );
@@ -35,20 +36,15 @@ export const Headline = forwardRef<HTMLDivElement, HeadlineProps>(
           return (
             <span
               key={index}
-              className="inline-block overflow-hidden py-1 px-[1px]"
+              data-letter-index={index}
+              className={`inline-block ${
+                variant === "ghost" ? "ghost-headline" : "solid-headline text-[#010200]"
+              }`}
+              style={{
+                willChange: "transform, opacity",
+              }}
             >
-              <span
-                data-ghost-letter={variant === "ghost" ? "true" : undefined}
-                className={`inline-block ${
-                  variant === "ghost" ? "ghost-headline" : "solid-headline"
-                }`}
-                style={{
-                  willChange: "transform, opacity",
-                  transform: variant === "ghost" ? "translateY(110%)" : "translateY(0%)",
-                }}
-              >
-                {char}
-              </span>
+              {char}
             </span>
           );
         })}
