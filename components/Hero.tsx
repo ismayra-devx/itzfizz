@@ -77,7 +77,7 @@ export default function Hero() {
           rotation: 0,
         });
 
-        // Activate all cards in final state
+        // Activate all cards in flat solid color final state
         cardEls.forEach((cardEl) => {
           const fill = cardEl.querySelector<HTMLElement>("[data-card-fill]");
           const num = cardEl.querySelector<HTMLElement>("[data-card-number]");
@@ -292,7 +292,6 @@ export default function Hero() {
       );
 
       // B.1 Car travel from start position across the road to right edge
-      // Uses function-based value with invalidateOnRefresh
       scrollTl.to(
         carRef.current,
         {
@@ -415,7 +414,7 @@ export default function Hero() {
         scrollTl.to(
           cardEl,
           {
-            borderColor: "rgba(0,0,0,0.08)",
+            borderColor: "rgba(0,0,0,0.06)",
             duration: cardActivationWindow,
             ease: "power2.out",
           },
@@ -495,51 +494,50 @@ export default function Hero() {
 
   return (
     <div ref={containerRef} className="relative w-full bg-[#1F2316] select-none">
-      {/* 1. Static Cinematic Overlays: Vignette & Soft-Light SVG Grain (Nothing animates) */}
-      <div className="scene-grain" aria-hidden="true" />
-      <div className="scene-vignette" aria-hidden="true" />
-
       {/* Hero Viewport (100svh screen pinned during scroll) */}
       <section
         ref={heroSectionRef}
         className="relative h-[100svh] w-full overflow-hidden flex items-center justify-center"
       >
-        {/* 2. Drone Aerial Scene: Foliage Verges & Leaf Specks */}
+        {/* z-0 & z-1: Ground Base (0) and Foliage Verges (1) */}
         <Scene ref={sceneRef} />
 
-        {/* 3. Road Strip (~27svh desktop / ~22svh mobile) with trailClip & mint trail */}
+        {/* z-2 to z-4: Road (2) < ghost headline (3) < trailClip & trail (4) */}
         <Road
           roadRef={roadStripRef}
           trailRef={trailRef}
           counterHeadlineRef={counterHeadlineRef}
           ghostHeadlineRef={ghostHeadlineRef}
-          className="z-10"
         />
 
-        {/* 4. Real Supercar from /car-right.webp at its scroll start position on the road */}
-        {/* z-order: asphalt (0) < double yellow (10) < ghost headline (20) < trailClip (30) < speed streaks (40) < car shadow (45) < car (50) */}
+        {/* z-5 to z-7: Speed streaks (5) < car shadow (6) < car (7) */}
         <Car
           ref={carRef}
           shadowRef={carShadowRef}
           streaksRef={streaksRef}
           mode="start"
-          className="top-1/2 -translate-y-1/2 z-50"
+          className="top-1/2 -translate-y-1/2"
         />
 
-        {/* 5. Canopy Foliage Layer (Overlaps road edges, ABOVE car in z-index) */}
-        <Canopy ref={canopyRef} className="z-60" />
+        {/* z-8: Canopy Layer (road edges only, above car, below vignette/grain) */}
+        <Canopy ref={canopyRef} />
 
-        {/* 6. Four Stat Cards in Staggered Diagonal Zig-Zag Layout (Dim Inactive State) */}
-        <div className="pointer-events-none absolute inset-0 z-70">
+        {/* z-9: Vignette + Grain (strictly below cards at z-10) */}
+        <div className="scene-grain" style={{ zIndex: 9 }} aria-hidden="true" />
+        <div className="scene-vignette" style={{ zIndex: 9 }} aria-hidden="true" />
+
+        {/* z-10: Four Stat Cards in Staggered Diagonal Zig-Zag Layout (pure flat solid color, zero blur/gradient) */}
+        <div className="pointer-events-none absolute inset-0" style={{ zIndex: 10 }}>
           {STAT_CARDS_DATA.map((card) => (
             <StatCard key={card.id} card={card} state="inactive" />
           ))}
         </div>
 
-        {/* 7. SCROLL Hint (Bottom Center) */}
+        {/* z-11: SCROLL Hint (Bottom Center) */}
         <div
           ref={scrollHintRef}
-          className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 z-70 flex flex-col items-center gap-1.5"
+          className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5"
+          style={{ zIndex: 11 }}
           aria-hidden="true"
         >
           <span className="text-[10px] uppercase font-extrabold tracking-[0.32em] text-white/50">
@@ -551,7 +549,7 @@ export default function Hero() {
         </div>
       </section>
 
-      {/* 8. Next Section (100vh buffer so unpinning feels natural) */}
+      {/* Next Section (100vh buffer so unpinning feels natural) */}
       <section className="relative min-h-[100vh] w-full bg-[#181B11] border-t border-white/10 px-8 py-24 flex flex-col items-center justify-center text-center z-40">
         <div className="max-w-2xl flex flex-col items-center gap-4">
           <span className="text-xs uppercase tracking-[0.3em] text-[#50EF7E] font-bold">

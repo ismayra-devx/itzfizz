@@ -7,7 +7,8 @@ export const Canopy = forwardRef<HTMLDivElement, { className?: string }>(
     return (
       <div
         ref={ref}
-        className={`pointer-events-none absolute inset-0 z-30 overflow-hidden select-none ${className}`}
+        className={`pointer-events-none absolute inset-0 overflow-hidden select-none ${className}`}
+        style={{ zIndex: 8 }}
         aria-hidden="true"
       >
         {/* Cluster 1: Top road edge canopy (overlapping top road edge only, never headline zone) */}

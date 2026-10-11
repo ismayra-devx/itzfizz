@@ -42,11 +42,14 @@ export const Scene = forwardRef<HTMLDivElement, { className?: string }>(
       <div
         ref={ref}
         className={`pointer-events-none absolute inset-0 overflow-hidden select-none ${className}`}
+        style={{ zIndex: 0 }}
         aria-hidden="true"
       >
-        {/* TOP VERGE (Dense foliage #2F311A and #1F2316 with reddish leaf-litter #45342F) */}
-        <div className="absolute inset-x-0 top-0 h-[40svh] -z-10">
-          {/* Overlapping organic radial gradient blobs (no CSS filter blur) */}
+        {/* Ground Base (z-index: 0) */}
+        <div className="absolute inset-0 bg-[#1F2316]" style={{ zIndex: 0 }} />
+
+        {/* TOP VERGE (z-index: 1, Dense foliage #2F311A and #1F2316 with reddish leaf-litter #45342F) */}
+        <div className="absolute inset-x-0 top-0 h-[40svh]" style={{ zIndex: 1 }}>
           <div
             className="absolute inset-0"
             style={{
@@ -63,8 +66,8 @@ export const Scene = forwardRef<HTMLDivElement, { className?: string }>(
           />
         </div>
 
-        {/* BOTTOM VERGE (Dense foliage along bottom screen edge, thinning toward the road) */}
-        <div className="absolute inset-x-0 bottom-0 h-[40svh] -z-10">
+        {/* BOTTOM VERGE (z-index: 1, Dense foliage along bottom screen edge) */}
+        <div className="absolute inset-x-0 bottom-0 h-[40svh]" style={{ zIndex: 1 }}>
           <div
             className="absolute inset-0"
             style={{
@@ -81,8 +84,8 @@ export const Scene = forwardRef<HTMLDivElement, { className?: string }>(
           />
         </div>
 
-        {/* GROUND LIFE (~30 tiny leaf specks drifting left during scroll) */}
-        <div className="absolute inset-0 z-10 pointer-events-none">
+        {/* GROUND LIFE (z-index: 2, ~30 tiny leaf specks drifting on road) */}
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2 }}>
           {SPECK_DATA.map((speck) => (
             <div
               key={speck.id}
