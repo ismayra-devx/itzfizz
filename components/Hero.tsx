@@ -1,42 +1,89 @@
 "use client";
 
 import { useRef } from "react";
+import Scene from "./Scene";
+import Canopy from "./Canopy";
+import Road from "./Road";
 import Car from "./Car";
+import StatCard, { STAT_CARDS_DATA } from "./StatCard";
 
 export default function Hero() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const roadStripRef = useRef<HTMLDivElement>(null);
+  const trailRef = useRef<HTMLDivElement>(null);
+  const counterHeadlineRef = useRef<HTMLDivElement>(null);
+  const ghostHeadlineRef = useRef<HTMLDivElement>(null);
   const carRef = useRef<HTMLDivElement>(null);
+  const carShadowRef = useRef<HTMLDivElement>(null);
+  const streaksRef = useRef<HTMLDivElement>(null);
+  const scrollHintRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#1F2316] flex flex-col items-center justify-center">
-      {/* Static Vignette and Grain */}
+    <div ref={containerRef} className="relative w-full bg-[#1F2316] select-none">
+      {/* Fixed Overlays: Static Grain & Vignette */}
       <div className="scene-grain" />
       <div className="scene-vignette" />
 
-      {/* Road Preview Strip */}
-      <div className="relative w-full h-[27svh] bg-[#4A433C] flex items-center justify-center border-y border-[#3A332C]/60 shadow-2xl">
-        {/* Double yellow lines */}
-        <div className="absolute inset-x-0 flex flex-col gap-[4px] items-center pointer-events-none">
-          <div className="w-full h-[3px] bg-[#C9984F]/90" />
-          <div className="w-full h-[3px] bg-[#C9984F]/90" />
+      {/* Hero Viewport (100svh pinned section) */}
+      <section className="relative h-[100svh] w-full overflow-hidden flex items-center justify-center">
+        {/* Background Drone Aerial Scene: Foliage Verges & Leaf Specks */}
+        <Scene />
+
+        {/* Central Road Strip (~27svh desktop / ~22svh mobile) with Mint Trail Mask */}
+        <Road
+          roadRef={roadStripRef}
+          trailRef={trailRef}
+          counterHeadlineRef={counterHeadlineRef}
+          ghostHeadlineRef={ghostHeadlineRef}
+          className="z-15"
+        />
+
+        {/* Car Component (Centered vertically on road center line) */}
+        <Car
+          ref={carRef}
+          shadowRef={carShadowRef}
+          streaksRef={streaksRef}
+          className="z-20 left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"
+        />
+
+        {/* Canopy Foliage Layer (Overlaps road edges, ABOVE car in z-index) */}
+        <Canopy className="z-30" />
+
+        {/* 4 Stat Cards in Staggered Diagonal Zig-Zag Layout */}
+        <div className="pointer-events-none absolute inset-0 z-35">
+          {STAT_CARDS_DATA.map((card) => (
+            <StatCard key={card.id} card={card} />
+          ))}
         </div>
 
-        {/* Ghost Headline Preview */}
-        <h1 className="ghost-headline z-10 text-[clamp(2.5rem,8vw,7.5rem)] font-extrabold uppercase tracking-[0.08em] select-none text-center">
-          WELCOME ITZFIZZ
-        </h1>
+        {/* Cinematic Scroll Hint (Bottom Center) */}
+        <div
+          ref={scrollHintRef}
+          className="pointer-events-none absolute bottom-7 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2"
+        >
+          <span className="text-[10px] uppercase font-bold tracking-[0.32em] text-white/50">
+            SCROLL
+          </span>
+          <div className="h-6 w-[1.5px] overflow-hidden rounded-full bg-white/15">
+            <div className="h-full w-full bg-[#50EF7E] animate-bounce" />
+          </div>
+        </div>
+      </section>
 
-        {/* Car positioned centered on road */}
-        <Car ref={carRef} className="z-20 left-1/2 -translate-x-1/2" />
-      </div>
-
-      <div className="absolute bottom-10 flex flex-col items-center gap-2">
-        <span className="text-xs uppercase tracking-[0.3em] text-[#50EF7E] font-semibold">
-          Task 1 Scaffolding & Asset Verification
-        </span>
-        <span className="text-[11px] text-white/50 tracking-wider">
-          Next.js App Router • Tailwind CSS • GSAP • Archivo 800 • GitHub Pages Export
-        </span>
-      </div>
+      {/* Next Section (100vh buffer so unpinning feels natural and clean) */}
+      <section className="relative min-h-[100vh] w-full bg-[#181B11] border-t border-white/10 px-8 py-24 flex flex-col items-center justify-center text-center z-40">
+        <div className="max-w-2xl flex flex-col items-center gap-4">
+          <span className="text-xs uppercase tracking-[0.3em] text-[#50EF7E] font-bold">
+            ITZFIZZ EXPERIENCE
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-extrabold uppercase tracking-tight text-white">
+            ENGINEERED FOR RAW MOMENTUM
+          </h2>
+          <p className="text-sm sm:text-base text-white/60 leading-relaxed max-w-lg">
+            Smooth scroll-driven choreography combining precision physics, responsive viewport adaptation, and high-impact visual design.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
