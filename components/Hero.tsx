@@ -23,6 +23,9 @@ export default function Hero() {
   const scrollHintRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
+    let restTimer: NodeJS.Timeout | null = null;
+
+    // Check user preference for reduced motion
     const prefersReduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
@@ -35,9 +38,14 @@ export default function Hero() {
 
       const ghostLetters = container.querySelectorAll<HTMLElement>("[data-ghost-letter]");
       const cardEls = container.querySelectorAll<HTMLElement>("[data-card-id]");
+      const slowSpecks = container.querySelectorAll<HTMLElement>('[data-speck="slow"]');
+      const fastSpecks = container.querySelectorAll<HTMLElement>('[data-speck="fast"]');
+      const canopy1 = container.querySelector<HTMLElement>('[data-canopy="1"]');
+      const canopy2 = container.querySelector<HTMLElement>('[data-canopy="2"]');
+      const canopy3 = container.querySelector<HTMLElement>('[data-canopy="3"]');
 
       if (prefersReduced) {
-        // Reduced motion: show settled final state without pinning
+        // Reduced motion: skip pin and show final resting state immediately
         gsap.set([sceneRef.current, canopyRef.current, roadStripRef.current], {
           opacity: 1,
           scaleX: 1,
@@ -49,13 +57,15 @@ export default function Hero() {
 
         // Park car at right edge
         const carWidth = carRef.current ? carRef.current.offsetWidth : 360;
-        const leftOffset = window.innerWidth < 768 ? window.innerWidth * 0.02 : window.innerWidth * 0.04;
+        const leftOffset =
+          window.innerWidth < 768 ? window.innerWidth * 0.02 : window.innerWidth * 0.04;
         gsap.set(carRef.current, {
           xPercent: 0,
           x: window.innerWidth - leftOffset - carWidth * 0.35,
+          rotation: 0,
         });
 
-        // Activate cards
+        // Activate all cards in final state
         cardEls.forEach((cardEl) => {
           const fill = cardEl.querySelector<HTMLElement>("[data-card-fill]");
           const num = cardEl.querySelector<HTMLElement>("[data-card-number]");
@@ -86,10 +96,14 @@ export default function Hero() {
       gsap.set(carRef.current, {
         xPercent: -150,
         x: 0,
+        rotation: 0,
       });
+      if (streaksRef.current) {
+        gsap.set(streaksRef.current, { scaleX: 0, opacity: 0 });
+      }
       gsap.set(scrollHintRef.current, { opacity: 0, y: 12 });
 
-      // Trail starts hidden to the left; solid headline counter-translates to match
+      // Trail starts hidden to the left; solid headline counter-translates
       gsap.set(trailRef.current, { xPercent: -100 });
       gsap.set(counterHeadlineRef.current, { xPercent: 100 });
 
@@ -178,8 +192,26 @@ export default function Hero() {
         1.8
       );
 
-      // ─── 3. TIMELINE B: SCROLL-DRIVEN SCRUBBED TIMELINE ─────────────────
-      // Total virtual duration normalized to 100 for percentage-based threshold mapping
+      // ─── 3. B.4 VELOCITY QUICKTO CONTROLLERS (Clamped & Eased) ──────────
+      // Fast, non-allocating velocity tween targets using gsap.quickTo
+      const carRotateTo = gsap.quickTo(carRef.current, "rotation", {
+        duration: 0.35,
+        ease: "power2.out",
+      });
+      const streakScaleTo = streaksRef.current
+        ? gsap.quickTo(streaksRef.current, "scaleX", {
+            duration: 0.3,
+            ease: "power2.out",
+          })
+        : null;
+      const streakOpacityTo = streaksRef.current
+        ? gsap.quickTo(streaksRef.current, "opacity", {
+            duration: 0.25,
+            ease: "power2.out",
+          })
+        : null;
+
+      // ─── 4. TIMELINE B: SCROLL-DRIVEN SCRUBBED TIMELINE ─────────────────
       const scrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: heroSection,
@@ -191,7 +223,7 @@ export default function Hero() {
           invalidateOnRefresh: true,
           anticipatePin: 1,
           onUpdate: (self) => {
-            // Pause idle rumble once scrolling begins
+            // Idle rumble toggle
             if (idleRumble) {
               if (self.progress > 0.01 && idleRumble.isActive()) {
                 idleRumble.pause();
@@ -199,6 +231,26 @@ export default function Hero() {
                 idleRumble.play();
               }
             }
+
+            // B.4 Velocity calculation (no layout reads, purely from ScrollTrigger)
+            const velocity = self.getVelocity();
+
+            // Clamped car tilt: ±1.5deg
+            const clampedTilt = gsap.utils.clamp(-1.5, 1.5, (velocity / 1200) * 1.2);
+            carRotateTo(clampedTilt);
+
+            // Clamped speed streaks behind the car (scaleX 0->1)
+            const speedRatio = gsap.utils.clamp(0, 1, Math.abs(velocity) / 1600);
+            if (streakScaleTo) streakScaleTo(speedRatio);
+            if (streakOpacityTo) streakOpacityTo(speedRatio > 0.04 ? speedRatio * 0.95 : 0);
+
+            // Ease back to rest when scrolling stops
+            if (restTimer) clearTimeout(restTimer);
+            restTimer = setTimeout(() => {
+              carRotateTo(0);
+              if (streakScaleTo) streakScaleTo(0);
+              if (streakOpacityTo) streakOpacityTo(0);
+            }, 80);
           },
         },
       });
@@ -215,8 +267,8 @@ export default function Hero() {
         0
       );
 
-      // B.1 Car travel from start position to right edge (ending with only rear visible)
-      // Function-based values + invalidateOnRefresh so resizing adapts dynamically
+      // B.1 Car travel from start position across the road to right edge
+      // Function-based value so window resize is dynamically supported
       scrollTl.to(
         carRef.current,
         {
@@ -235,8 +287,7 @@ export default function Hero() {
         0
       );
 
-      // B.2 Counter-translating mint trail reveal locked to the car's rear edge
-      // Trail moves translateX(-100% -> 0), solid headline moves translateX(+100% -> 0)
+      // B.2 Counter-translating mint trail reveal locked to car rear edge
       scrollTl.to(
         trailRef.current,
         {
@@ -257,14 +308,44 @@ export default function Hero() {
         0
       );
 
+      // B.5 Ground life specks drift LEFT at two different speeds (transform only)
+      if (slowSpecks.length > 0) {
+        scrollTl.to(
+          slowSpecks,
+          {
+            x: "-8vw",
+            ease: "none",
+            duration: 100,
+          },
+          0
+        );
+      }
+
+      if (fastSpecks.length > 0) {
+        scrollTl.to(
+          fastSpecks,
+          {
+            x: "-18vw",
+            ease: "none",
+            duration: 100,
+          },
+          0
+        );
+      }
+
+      // B.5 Canopy layers parallax drift (-2vw to -5vw across scroll, transform only)
+      if (canopy1) {
+        scrollTl.to(canopy1, { x: "-2.5vw", ease: "none", duration: 100 }, 0);
+      }
+      if (canopy2) {
+        scrollTl.to(canopy2, { x: "-5vw", ease: "none", duration: 100 }, 0);
+      }
+      if (canopy3) {
+        scrollTl.to(canopy3, { x: "-3.5vw", ease: "none", duration: 100 }, 0);
+      }
+
       // B.3 Card activations at exact thresholds: 28% -> 44% -> 61% -> 78%
-      // Each activation performs:
-      // - color-fill layer scaleX 0->1 (origin left)
-      // - border tint flip
-      // - text color flip to final
-      // - number count-up 0->target (object tween with onUpdate for reversible scrubbing)
-      // - subtle scale pulse 1 -> 1.04 -> 1
-      const cardActivationWindow = 7; // 7 units duration for smooth scrub response
+      const cardActivationWindow = 7;
 
       STAT_CARDS_DATA.forEach((cardData) => {
         const cardEl = container.querySelector<HTMLElement>(
@@ -324,7 +405,7 @@ export default function Hero() {
             startTime + cardActivationWindow * 0.5
           );
 
-        // 4. Text color flip to final card token
+        // 4. Text color flip
         if (numberEl) {
           scrollTl.to(
             numberEl,
@@ -349,7 +430,7 @@ export default function Hero() {
           );
         }
 
-        // 5. Number counter tween: 0 -> target (reversing scroll un-counts numbers)
+        // 5. Reversible number count-up: 0 -> target
         if (numberEl) {
           scrollTl.to(
             countObj,
@@ -367,8 +448,11 @@ export default function Hero() {
       });
     }, containerRef);
 
-    // Clean up all GSAP timelines and ScrollTriggers on unmount
-    return () => ctx.revert();
+    // Clean up all GSAP timelines, quickTo instances, and timers on unmount
+    return () => {
+      if (restTimer) clearTimeout(restTimer);
+      ctx.revert();
+    };
   }, []);
 
   return (
