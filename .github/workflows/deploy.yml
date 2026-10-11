@@ -32,8 +32,9 @@ jobs:
         run: npm ci
 
       - name: Build
+        # Defaults to /itzfizz for https://ismayra-devx.github.io/itzfizz/, or uses repository variable if set
         env:
-          NEXT_PUBLIC_BASE_PATH: ${{ vars.NEXT_PUBLIC_BASE_PATH }}
+          NEXT_PUBLIC_BASE_PATH: ${{ vars.NEXT_PUBLIC_BASE_PATH || '/itzfizz' }}
         run: npm run build
 
       - name: Upload Pages artifact
