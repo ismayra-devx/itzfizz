@@ -19,22 +19,27 @@ interface CarProps {
   className?: string;
   shadowRef?: React.RefObject<HTMLDivElement | null>;
   streaksRef?: React.RefObject<HTMLDivElement | null>;
-  /** Position mode: 'parked' at right edge (final state) or custom */
-  mode?: "parked" | "centered" | "custom";
+  /** 'start' = positioned on left ready for scroll; 'parked' = right edge; 'custom' = custom positioning */
+  mode?: "start" | "parked" | "custom";
 }
 
 export const Car = forwardRef<HTMLDivElement, CarProps>(
-  ({ className = "", shadowRef, streaksRef, mode = "parked" }, ref) => {
-    // In final parked state, car nose extends past the right screen edge so only the rear is visible at the right edge
-    const parkedPlacement =
+  ({ className = "", shadowRef, streaksRef, mode = "start" }, ref) => {
+    // Positioning mode:
+    // 'start': At its scroll start position (left portion of the road strip)
+    // 'parked': At the right edge with only its rear visible
+    const placement =
       mode === "parked"
         ? "right-0 translate-x-[55%] max-md:translate-x-[45%]"
+        : mode === "start"
+        ? "left-0 translate-x-[4vw] max-md:translate-x-[2vw]"
         : "";
 
     return (
       <div
         ref={ref}
-        className={`pointer-events-none absolute select-none z-20 ${parkedPlacement} ${className}`}
+        data-car-container
+        className={`pointer-events-none absolute select-none z-20 ${placement} ${className}`}
         style={{
           width: "clamp(280px, 26vw, 480px)",
           aspectRatio: "2.02 / 1",
@@ -54,7 +59,7 @@ export const Car = forwardRef<HTMLDivElement, CarProps>(
           }}
         />
 
-        {/* Speed streaks behind the car (hidden in static final state) */}
+        {/* Speed streaks behind the car (hidden during load & static idle) */}
         <div
           ref={streaksRef}
           className="pointer-events-none absolute top-1/2 -left-16 -translate-y-1/2 flex flex-col gap-3.5 opacity-0 pointer-events-none"

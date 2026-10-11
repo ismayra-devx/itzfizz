@@ -78,7 +78,7 @@ interface StatCardProps {
 }
 
 export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
-  ({ card, className = "", state = "final" }, ref) => {
+  ({ card, className = "", state = "inactive" }, ref) => {
     const isFinal = state === "final";
 
     return (
@@ -90,7 +90,7 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
         className={`pointer-events-auto absolute z-25 w-[clamp(170px,18vw,255px)] select-none rounded-[8px] p-[18px] max-sm:p-3 overflow-hidden shadow-2xl transition-all duration-300 ${card.desktopPosition} max-md:${card.mobilePosition} ${className}`}
         style={{
           fontFamily: "var(--font-archivo), sans-serif",
-          backgroundColor: isFinal ? card.bgColor : "rgba(22, 24, 16, 0.4)",
+          backgroundColor: isFinal ? card.bgColor : "transparent",
           border: isFinal ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255, 255, 255, 0.25)",
           color: isFinal ? card.textColor : "rgba(255, 255, 255, 0.95)",
           willChange: "transform, opacity",

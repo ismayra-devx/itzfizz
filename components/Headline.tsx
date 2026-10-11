@@ -36,15 +36,21 @@ export const Headline = forwardRef<HTMLDivElement, HeadlineProps>(
           return (
             <span
               key={index}
-              data-letter-index={index}
-              className={`inline-block ${
-                variant === "ghost" ? "ghost-headline" : "solid-headline text-[#010200]"
-              }`}
-              style={{
-                willChange: "transform, opacity",
-              }}
+              className="inline-block overflow-hidden py-1 leading-none"
+              style={{ verticalAlign: "middle" }}
             >
-              {char}
+              <span
+                data-ghost-letter={variant === "ghost" ? "true" : undefined}
+                className={`inline-block ${
+                  variant === "ghost" ? "ghost-headline" : "solid-headline text-[#010200]"
+                }`}
+                style={{
+                  willChange: "transform, opacity",
+                  transform: variant === "ghost" ? "translateY(110%)" : "translateY(0%)",
+                }}
+              >
+                {char}
+              </span>
             </span>
           );
         })}
