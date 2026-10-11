@@ -16,7 +16,7 @@ export default function Hero() {
   const roadStripRef = useRef<HTMLDivElement>(null);
   const trailRef = useRef<HTMLDivElement>(null);
   const counterHeadlineRef = useRef<HTMLDivElement>(null);
-  const ghostHeadlineRef = useRef<HTMLDivElement>(null);
+  const ghostHeadlineRef = useRef<HTMLHeadingElement>(null);
   const carRef = useRef<HTMLDivElement>(null);
   const carShadowRef = useRef<HTMLDivElement>(null);
   const streaksRef = useRef<HTMLDivElement>(null);
@@ -44,6 +44,20 @@ export default function Hero() {
       const canopy2 = container.querySelector<HTMLElement>('[data-canopy="2"]');
       const canopy3 = container.querySelector<HTMLElement>('[data-canopy="3"]');
 
+      // Helper function to measure geometry dynamically without layout reads during scroll
+      const getGeometry = () => {
+        const roadEl = roadStripRef.current;
+        const carEl = carRef.current;
+        const W = roadEl ? roadEl.offsetWidth : window.innerWidth;
+        const carWidth = carEl ? carEl.offsetWidth : 360;
+        const carLeft =
+          window.innerWidth < 768 ? window.innerWidth * 0.02 : window.innerWidth * 0.04;
+        const carCenterStart = carLeft + carWidth * 0.5;
+        const carCenterEnd = W + carWidth * 0.15;
+        const carTravelEnd = W - carLeft - carWidth * 0.35;
+        return { W, carWidth, carLeft, carCenterStart, carCenterEnd, carTravelEnd };
+      };
+
       if (prefersReduced) {
         // Reduced motion: skip pin and show final resting state immediately
         gsap.set([sceneRef.current, canopyRef.current, roadStripRef.current], {
@@ -52,16 +66,14 @@ export default function Hero() {
         });
         gsap.set(ghostLetters, { yPercent: 0 });
         gsap.set(scrollHintRef.current, { opacity: 0 });
-        gsap.set(trailRef.current, { xPercent: 0 });
-        gsap.set(counterHeadlineRef.current, { xPercent: 0 });
+        gsap.set(trailRef.current, { x: 0, xPercent: 0 });
+        gsap.set(counterHeadlineRef.current, { x: 0, xPercent: 0 });
 
         // Park car at right edge
-        const carWidth = carRef.current ? carRef.current.offsetWidth : 360;
-        const leftOffset =
-          window.innerWidth < 768 ? window.innerWidth * 0.02 : window.innerWidth * 0.04;
+        const { carTravelEnd } = getGeometry();
         gsap.set(carRef.current, {
           xPercent: 0,
-          x: window.innerWidth - leftOffset - carWidth * 0.35,
+          x: carTravelEnd,
           rotation: 0,
         });
 
@@ -92,6 +104,7 @@ export default function Hero() {
         scale: 0.94,
         transformOrigin: "center center",
       });
+
       // Car starts off-screen left during load
       gsap.set(carRef.current, {
         xPercent: -150,
@@ -103,9 +116,21 @@ export default function Hero() {
       }
       gsap.set(scrollHintRef.current, { opacity: 0, y: 12 });
 
-      // Trail starts hidden to the left; solid headline counter-translates
-      gsap.set(trailRef.current, { xPercent: -100 });
-      gsap.set(counterHeadlineRef.current, { xPercent: 100 });
+      // Trail starts with right edge locked to carCenterStart; solidHeadline counter-translates by opposite
+      gsap.set(trailRef.current, {
+        x: () => {
+          const { W, carCenterStart } = getGeometry();
+          return carCenterStart - W;
+        },
+        xPercent: 0,
+      });
+      gsap.set(counterHeadlineRef.current, {
+        x: () => {
+          const { W, carCenterStart } = getGeometry();
+          return -(carCenterStart - W);
+        },
+        xPercent: 0,
+      });
 
       // ─── 2. TIMELINE A: MASTER LOAD CHOREOGRAPHY (~2.4s) ────────────────
       const loadTl = gsap.timeline({
@@ -193,7 +218,6 @@ export default function Hero() {
       );
 
       // ─── 3. B.4 VELOCITY QUICKTO CONTROLLERS (Clamped & Eased) ──────────
-      // Fast, non-allocating velocity tween targets using gsap.quickTo
       const carRotateTo = gsap.quickTo(carRef.current, "rotation", {
         duration: 0.35,
         ease: "power2.out",
@@ -232,7 +256,7 @@ export default function Hero() {
               }
             }
 
-            // B.4 Velocity calculation (no layout reads, purely from ScrollTrigger)
+            // Velocity calculation (zero layout reads)
             const velocity = self.getVelocity();
 
             // Clamped car tilt: ±1.5deg
@@ -255,7 +279,7 @@ export default function Hero() {
         },
       });
 
-      // B.5 Scroll hint fades out immediately on initial scroll
+      // Scroll hint fades out on initial scroll
       scrollTl.to(
         scrollHintRef.current,
         {
@@ -268,18 +292,13 @@ export default function Hero() {
       );
 
       // B.1 Car travel from start position across the road to right edge
-      // Function-based value so window resize is dynamically supported
+      // Uses function-based value with invalidateOnRefresh
       scrollTl.to(
         carRef.current,
         {
           x: () => {
-            const carEl = carRef.current;
-            const carWidth = carEl ? carEl.offsetWidth : 360;
-            const leftOffset =
-              window.innerWidth < 768
-                ? window.innerWidth * 0.02
-                : window.innerWidth * 0.04;
-            return window.innerWidth - leftOffset - carWidth * 0.35;
+            const { carTravelEnd } = getGeometry();
+            return carTravelEnd;
           },
           ease: "none",
           duration: 100,
@@ -287,28 +306,47 @@ export default function Hero() {
         0
       );
 
-      // B.2 Counter-translating mint trail reveal locked to car rear edge
-      scrollTl.to(
+      // B.2 Animate .trail translateX from (carCenterStart - W) to (carCenterEnd - W)
+      scrollTl.fromTo(
         trailRef.current,
         {
-          xPercent: 0,
+          x: () => {
+            const { W, carCenterStart } = getGeometry();
+            return carCenterStart - W;
+          },
+        },
+        {
+          x: () => {
+            const { W, carCenterEnd } = getGeometry();
+            return carCenterEnd - W;
+          },
           ease: "none",
           duration: 100,
         },
         0
       );
 
-      scrollTl.to(
+      // B.2 Animate .solidHeadline by the exact opposite value (counter-translate)
+      scrollTl.fromTo(
         counterHeadlineRef.current,
         {
-          xPercent: 0,
+          x: () => {
+            const { W, carCenterStart } = getGeometry();
+            return -(carCenterStart - W);
+          },
+        },
+        {
+          x: () => {
+            const { W, carCenterEnd } = getGeometry();
+            return -(carCenterEnd - W);
+          },
           ease: "none",
           duration: 100,
         },
         0
       );
 
-      // B.5 Ground life specks drift LEFT at two different speeds (transform only)
+      // B.5 Ground life specks drift LEFT (transform only)
       if (slowSpecks.length > 0) {
         scrollTl.to(
           slowSpecks,
@@ -469,30 +507,30 @@ export default function Hero() {
         {/* 2. Drone Aerial Scene: Foliage Verges & Leaf Specks */}
         <Scene ref={sceneRef} />
 
-        {/* 3. Central Road Strip (~27svh desktop / ~22svh mobile) with Mint Trail Mask */}
+        {/* 3. Road Strip (~27svh desktop / ~22svh mobile) with trailClip & mint trail */}
         <Road
           roadRef={roadStripRef}
           trailRef={trailRef}
           counterHeadlineRef={counterHeadlineRef}
           ghostHeadlineRef={ghostHeadlineRef}
-          mode="interactive"
           className="z-10"
         />
 
         {/* 4. Real Supercar from /car-right.webp at its scroll start position on the road */}
+        {/* z-order: asphalt (0) < double yellow (10) < ghost headline (20) < trailClip (30) < speed streaks (40) < car shadow (45) < car (50) */}
         <Car
           ref={carRef}
           shadowRef={carShadowRef}
           streaksRef={streaksRef}
           mode="start"
-          className="top-1/2 -translate-y-1/2 z-20"
+          className="top-1/2 -translate-y-1/2 z-50"
         />
 
         {/* 5. Canopy Foliage Layer (Overlaps road edges, ABOVE car in z-index) */}
-        <Canopy ref={canopyRef} className="z-30" />
+        <Canopy ref={canopyRef} className="z-60" />
 
         {/* 6. Four Stat Cards in Staggered Diagonal Zig-Zag Layout (Dim Inactive State) */}
-        <div className="pointer-events-none absolute inset-0 z-25">
+        <div className="pointer-events-none absolute inset-0 z-70">
           {STAT_CARDS_DATA.map((card) => (
             <StatCard key={card.id} card={card} state="inactive" />
           ))}
@@ -501,7 +539,7 @@ export default function Hero() {
         {/* 7. SCROLL Hint (Bottom Center) */}
         <div
           ref={scrollHintRef}
-          className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 z-35 flex flex-col items-center gap-1.5"
+          className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 z-70 flex flex-col items-center gap-1.5"
           aria-hidden="true"
         >
           <span className="text-[10px] uppercase font-extrabold tracking-[0.32em] text-white/50">

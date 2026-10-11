@@ -39,7 +39,7 @@ export const Car = forwardRef<HTMLDivElement, CarProps>(
       <div
         ref={ref}
         data-car-container
-        className={`pointer-events-none absolute select-none z-20 ${placement} ${className}`}
+        className={`pointer-events-none absolute select-none z-50 ${placement} ${className}`}
         style={{
           width: "clamp(280px, 26vw, 480px)",
           aspectRatio: "2.02 / 1",
@@ -48,7 +48,7 @@ export const Car = forwardRef<HTMLDivElement, CarProps>(
         }}
         aria-hidden="true"
       >
-        {/* Soft contact shadow as a SEPARATE element moving with car (light from upper-left) */}
+        {/* Contact shadow (z-10 inside car container, light from upper-left) */}
         <div
           ref={shadowRef}
           className="pointer-events-none absolute inset-0 -z-10 translate-x-[2%] translate-y-[8%] scale-x-95 scale-y-80"
@@ -59,10 +59,10 @@ export const Car = forwardRef<HTMLDivElement, CarProps>(
           }}
         />
 
-        {/* Speed streaks behind the car (hidden during load & static idle) */}
+        {/* Speed streaks behind the car (z-10 inside car, hidden during load & static idle) */}
         <div
           ref={streaksRef}
-          className="pointer-events-none absolute top-1/2 -left-16 -translate-y-1/2 flex flex-col gap-3.5 opacity-0 pointer-events-none"
+          className="pointer-events-none absolute top-1/2 -left-16 -translate-y-1/2 flex flex-col gap-3.5 opacity-0 pointer-events-none z-10"
           style={{ willChange: "transform, opacity", transformOrigin: "right center" }}
         >
           <div className="h-[1.5px] w-20 rounded-full bg-gradient-to-l from-white/70 to-transparent" />
@@ -70,8 +70,8 @@ export const Car = forwardRef<HTMLDivElement, CarProps>(
           <div className="h-[1.5px] w-16 rounded-full bg-gradient-to-l from-white/70 to-transparent" />
         </div>
 
-        {/* Car Image with picture element for responsive srcset */}
-        <picture className="block h-full w-full">
+        {/* Car Image with picture element for responsive srcset (z-20 inside car) */}
+        <picture className="block h-full w-full relative z-20">
           <source media="(max-width: 767px)" srcSet={`${getBasePath()}/car-right-mobile.webp`} />
           <img
             src={`${getBasePath()}/car-right.webp`}

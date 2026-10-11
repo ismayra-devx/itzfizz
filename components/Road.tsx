@@ -8,9 +8,7 @@ interface RoadProps {
   roadRef?: React.RefObject<HTMLDivElement | null>;
   trailRef?: React.RefObject<HTMLDivElement | null>;
   counterHeadlineRef?: React.RefObject<HTMLDivElement | null>;
-  ghostHeadlineRef?: React.RefObject<HTMLDivElement | null>;
-  /** 'final' = mint trail fully drawn (static scene state); 'interactive' = ready for GSAP */
-  mode?: "final" | "interactive";
+  ghostHeadlineRef?: React.RefObject<HTMLHeadingElement | null>;
 }
 
 export const Road = forwardRef<HTMLDivElement, RoadProps>(
@@ -21,7 +19,6 @@ export const Road = forwardRef<HTMLDivElement, RoadProps>(
       trailRef,
       counterHeadlineRef,
       ghostHeadlineRef,
-      mode = "final",
     },
     ref
   ) => {
@@ -31,7 +28,7 @@ export const Road = forwardRef<HTMLDivElement, RoadProps>(
         className={`relative w-full h-[27svh] max-sm:h-[22svh] flex items-center justify-center select-none ${className}`}
         style={{ willChange: "transform" }}
       >
-        {/* Road Strip Container: asphalt #4A433C with lower-half darker shadow & faint edge wear */}
+        {/* Road Strip Container (asphalt #4A433C with lower-half darker shadow) */}
         <div
           ref={roadRef}
           className="absolute inset-0 origin-left overflow-hidden border-y border-[#38312A]/80 shadow-[0_15px_40px_rgba(0,0,0,0.45)]"
@@ -42,43 +39,45 @@ export const Road = forwardRef<HTMLDivElement, RoadProps>(
             willChange: "transform",
           }}
         >
-          {/* Muted-amber DOUBLE YELLOW center line running full width */}
+          {/* z-10: Muted-amber DOUBLE YELLOW center line running full width */}
           <div
-            className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 flex flex-col gap-[4px] items-center"
+            className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 flex flex-col gap-[4px] items-center z-10"
             aria-hidden="true"
           >
             <div className="h-[3px] w-full bg-[#C9984F]/90 shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
             <div className="h-[3px] w-full bg-[#C9984F]/90 shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
           </div>
 
-          {/* GHOST HEADLINE COPY (underneath the mint trail, aria-hidden, one span per letter) */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+          {/* z-20: GHOST HEADLINE COPY (Underneath road trail, transparent fill, -webkit-text-stroke) */}
+          <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+            aria-hidden="true"
+          >
             <Headline ref={ghostHeadlineRef} variant="ghost" ariaHidden={true} />
           </div>
 
-          {/* MINT TRAIL REVEAL SYSTEM */}
-          {/* Outer wrapper: fixed full-width, overflow hidden */}
+          {/* z-30: TRAIL CLIP (position: absolute; inset: 0; overflow: hidden) */}
           <div
-            className="pointer-events-none absolute inset-0 overflow-hidden z-20"
+            className="trailClip pointer-events-none absolute inset-0 overflow-hidden z-30"
+            style={{ position: "absolute", inset: 0, overflow: "hidden" }}
             aria-hidden="true"
           >
-            {/* Trail Layer: in final state, fully drawn (translateX(0)) covering the road */}
+            {/* TRAIL (background #50EF7E; width: 100%; height: 100%; will-change: transform) */}
             <div
               ref={trailRef}
-              className="absolute inset-0 w-full h-full bg-[#50EF7E] shadow-[0_0_60px_rgba(80,239,126,0.35)]"
+              className="trail absolute inset-0 w-full h-full"
               style={{
-                transform: mode === "final" ? "translateX(0%)" : "translateX(-100%)",
+                backgroundColor: "#50EF7E",
+                width: "100%",
+                height: "100%",
                 willChange: "transform",
               }}
             >
-              {/* Solid headline inside the mint trail (#010200) */}
+              {/* SOLID HEADLINE (solid #010200 text, centered, same size/position as ghost headline) */}
               <div
                 ref={counterHeadlineRef}
-                className="absolute inset-0 flex items-center justify-center w-full h-full"
-                style={{
-                  transform: mode === "final" ? "translateX(0%)" : "translateX(100%)",
-                  willChange: "transform",
-                }}
+                className="solidHeadline absolute inset-0 flex items-center justify-center w-full h-full"
+                style={{ willChange: "transform" }}
               >
                 <Headline variant="solid" />
               </div>

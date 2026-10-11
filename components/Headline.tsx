@@ -10,12 +10,14 @@ interface HeadlineProps {
   ariaHidden?: boolean;
 }
 
-export const Headline = forwardRef<HTMLDivElement, HeadlineProps>(
+export const Headline = forwardRef<HTMLHeadingElement, HeadlineProps>(
   ({ className = "", variant = "ghost", ariaHidden }, ref) => {
+    const isGhost = variant === "ghost";
+
     return (
-      <div
+      <h1
         ref={ref}
-        aria-hidden={ariaHidden ?? (variant === "ghost")}
+        aria-hidden={ariaHidden ?? isGhost}
         className={`pointer-events-none select-none flex items-center justify-center w-[85%] max-w-[1400px] mx-auto text-center font-extrabold uppercase tracking-[0.08em] ${className}`}
         style={{
           fontFamily: "var(--font-archivo), sans-serif",
@@ -40,13 +42,15 @@ export const Headline = forwardRef<HTMLDivElement, HeadlineProps>(
               style={{ verticalAlign: "middle" }}
             >
               <span
-                data-ghost-letter={variant === "ghost" ? "true" : undefined}
-                className={`inline-block ${
-                  variant === "ghost" ? "ghost-headline" : "solid-headline text-[#010200]"
-                }`}
+                data-ghost-letter={isGhost ? "true" : undefined}
+                className="inline-block"
                 style={{
                   willChange: "transform, opacity",
-                  transform: variant === "ghost" ? "translateY(110%)" : "translateY(0%)",
+                  transform: isGhost ? "translateY(110%)" : "translateY(0%)",
+                  color: isGhost ? "transparent" : "#010200",
+                  WebkitTextStroke: isGhost
+                    ? "1.5px rgba(255, 255, 255, 0.28)"
+                    : "none",
                 }}
               >
                 {char}
@@ -54,7 +58,7 @@ export const Headline = forwardRef<HTMLDivElement, HeadlineProps>(
             </span>
           );
         })}
-      </div>
+      </h1>
     );
   }
 );
